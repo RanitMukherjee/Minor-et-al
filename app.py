@@ -10,11 +10,15 @@ import torch
 from facenet_pytorch import MTCNN
 import json
 import time
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import tempfile
 import groq
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Set page configuration
 st.set_page_config(
@@ -44,12 +48,12 @@ face_detector = load_face_detector()
 # Groq client initialization
 @st.cache_resource
 def get_groq_client():
-    api_key = os.environ.get("GROQ_API_KEY")
+    api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         api_key = st.secrets.get("GROQ_API_KEY", "")
     
     if not api_key:
-        st.warning("GROQ_API_KEY not found. Please set it in your environment variables or Streamlit secrets.")
+        st.warning("GROQ_API_KEY not found. Please set it in your .env file or Streamlit secrets.")
         return None
     
     return groq.Client(api_key=api_key)
@@ -234,7 +238,7 @@ if uploaded_file is not None:
     img_array = np.array(image)
     
     if st.sidebar.button("Analyze Image"):
-        if not os.environ.get("GROQ_API_KEY") and not st.secrets.get("GROQ_API_KEY"):
+        if not os.getenv("GROQ_API_KEY") and not st.secrets.get("GROQ_API_KEY"):
             st.error("Please enter your Groq API Key in the sidebar before analyzing.")
         else:
             with st.spinner("Extracting facial biomarkers..."):
@@ -296,10 +300,14 @@ st.sidebar.markdown(
     """
     1. Install required packages:
     ```
-    pip install streamlit opencv-python numpy pandas pillow torch facenet-pytorch groq langchain sentence-transformers faiss-cpu
+    pip install streamlit opencv-python numpy pandas pillow torch facenet-pytorch groq langchain-community sentence-transformers faiss-cpu python-dotenv
     ```
-    2. Get a Groq API key from [Groq Console](https://console.groq.com)
-    3. Run the app:
+    2. Create a .env file with your Groq API key:
+    ```
+    GROQ_API_KEY=your_api_key_here
+    ```
+    3. Get a Groq API key from [Groq Console](https://console.groq.com)
+    4. Run the app:
     ```
     streamlit run app.py
     ```
